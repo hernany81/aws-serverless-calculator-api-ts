@@ -1,0 +1,236 @@
+org: mustang81
+app: calculator-api
+service: serverless-calculator-api
+frameworkVersion: "3"
+useDotenv: true
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs18.x
+  profile: serverless
+  memorySize: 256
+
+  apiGateway:
+    minimumCompressionSize: 1024
+    shouldStartNameWithService: true
+
+  vpc:
+    securityGroupIds:
+      - Fn::GetAtt: [ServerlessSecurityGroup, GroupId]
+    subnetIds:
+      - Ref: ServerlessPrivateSubnetA
+
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    NODE_OPTIONS: "--enable-source-maps --stack-trace-limit=1000"
+    MONGODB_URL: ${self:custom.mongoUrl}
+
+functions:
+  login:
+    handler: src/infra/index.loginHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/login
+          cors: true
+
+  logout:
+    handler: src/infra/index.logoutHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/logout
+          cors: true
+
+  profile:
+    handler: src/infra/index.profileHandler
+    events:
+      - http:
+          method: get
+          path: /api/v1/profile
+          cors: true
+
+  add:
+    handler: src/infra/index.addHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/add
+          cors: true
+
+  divide:
+    handler: src/infra/index.divideHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/divide
+          cors: true
+
+  multiply:
+    handler: src/infra/index.multiplyHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/multiply
+          cors: true
+
+  subtract:
+    handler: src/infra/index.subtractHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/subtract
+          cors: true
+
+  squareRoot:
+    handler: src/infra/index.squareRootHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/square-root
+          cors: true
+
+  randomString:
+    # Because the random string client suggests to avoid concurrent executions from the same IP.
+    # We might require a more complex architecture to use different IPs and spin up more Lambda instances
+    reservedConcurrency: 1
+    handler: src/infra/index.randomStringHandler
+    events:
+      - http:
+          method: post
+          path: /api/v1/calculator/random-string
+          cors: true
+
+  listOperationRecords:
+    handler: src/infra/index.listOperationRecordsHandler
+    events:
+      - http:
+          method: get
+          path: /api/v1/operation-records
+          cors: true
+
+  deleteOperationRecord:
+    handler: src/infra/index.deleteOperationRecordHandler
+    events:
+      - http:
+          method: delete
+          path: /api/v1/operation-records/{id}
+          cors: true
+
+package:
+  individually: false
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude:
+      - aws-sdk
+    target: node14
+    define:
+      "require.resolve": undefined
+    platform: "node"
+    concurrency: 10
+  mongoUrl: ${param:MONGODB_URL}
+
+resources:
+  Resources:
+    ServerlessVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: "10.0.0.0/16"
+    ElasticIpLambda:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+    InternetGatewayLambda:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: InternetGatewayLambda
+    VPCGatewayAttachmentLambda:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        InternetGatewayId:
+          Ref: InternetGatewayLambda
+    NatGatewayLambda:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId:
+          Fn::GetAtt:
+            - ElasticIpLambda
+            - AllocationId
+        SubnetId:
+          Ref: ServerlessPublicSubnetA
+    ServerlessPrivateSubnetA:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.0.1.0/24"
+    ServerlessPublicSubnetA:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+        AvailabilityZone: ${self:provider.region}a
+        CidrBlock: "10.0.2.0/24"
+    DefaultPrivateRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    DefaultPrivateRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: DefaultPrivateRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: NatGatewayLambda
+    DefaultPublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: ServerlessVPC
+    DefaultPublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: DefaultPublicRouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId:
+          Ref: InternetGatewayLambda
+    SubnetRouteTableAssociationLambdaPrivateA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessPrivateSubnetA
+        RouteTableId:
+          Ref: DefaultPrivateRouteTable
+    SubnetRouteTableAssociationLambdaPublicA:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: ServerlessPublicSubnetA
+        RouteTableId:
+          Ref: DefaultPublicRouteTable
+    ServerlessSecurityGroup:
+      DependsOn: ServerlessVPC
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: SecurityGroup for Serverless Functions
+        VpcId:
+          Ref: ServerlessVPC

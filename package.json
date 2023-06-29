@@ -1,0 +1,44 @@
+{
+  "name": "calculator-api-2",
+  "version": "1.0.0",
+  "description": "Serverless aws-nodejs-typescript template",
+  "scripts": {
+    "test": "jest --runInBand",
+    "local": "serverless offline --param \"MONGODB_URL=mongodb://hernan:password@localhost:27017/mongo?replicaSet=dbrs\" -s local"
+  },
+  "engines": {
+    "node": ">=18.15.0"
+  },
+  "dependencies": {
+    "@middy/core": "^3.4.0",
+    "@middy/http-cors": "^4.5.1",
+    "@middy/http-error-handler": "^4.5.1",
+    "@middy/http-event-normalizer": "^4.5.1",
+    "@middy/http-header-normalizer": "^4.5.1",
+    "@middy/http-json-body-parser": "^3.4.0",
+    "@middy/validator": "^4.5.1",
+    "axios": "^1.4.0",
+    "dayjs": "^1.11.8",
+    "decimal.js": "^10.4.3",
+    "hash-wasm": "^4.9.0",
+    "mongoose": "^7.2.4",
+    "mongoose-paginate-v2": "^1.7.1",
+    "winston": "^3.9.0"
+  },
+  "devDependencies": {
+    "@serverless/typescript": "^3.0.0",
+    "@types/aws-lambda": "^8.10.71",
+    "@types/jest": "^29.5.2",
+    "@types/node": "^14.14.25",
+    "esbuild": "^0.14.11",
+    "json-schema-to-ts": "^1.5.0",
+    "nock": "^13.3.1",
+    "serverless": "^3.0.0",
+    "serverless-esbuild": "^1.23.3",
+    "serverless-offline": "^12.0.4",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.4.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.1.3"
+  }
+}

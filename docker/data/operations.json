@@ -1,0 +1,26 @@
+[
+  {
+    "type": "ADDITION",
+    "cost": 5
+  },
+  {
+    "type": "SUBTRACTION",
+    "cost": 5
+  },
+  {
+    "type": "MULTIPLICATION",
+    "cost": 5
+  },
+  {
+    "type": "DIVISION",
+    "cost": 5
+  },
+  {
+    "type": "SQUARE_ROOT",
+    "cost": 7
+  },
+  {
+    "type": "RANDOM_STRING",
+    "cost": 10
+  }
+]

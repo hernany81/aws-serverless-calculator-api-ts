@@ -1,0 +1,14 @@
+[
+  {
+    "name": "John Doe",
+    "passwordHash": "$argon2id$v=19$m=512,t=256,p=1$UBgkiRVO9PSbF5O3T4pWnw$Ps11x6dC8ESVIeMNcFuHBw",
+    "status": "ACTIVE",
+    "creditBalance": 1000
+  },
+  {
+    "name": "Will Smith",
+    "passwordHash": "$argon2id$v=19$m=512,t=256,p=1$4A9fvxFQos3XZPFoWr1Mxw$AEkytqGZEfRh4IHvGLa67A",
+    "status": "INACTIVE",
+    "creditBalance": 1000
+  }
+]
